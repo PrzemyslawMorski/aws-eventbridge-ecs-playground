@@ -18,8 +18,14 @@ docker-compose up -d
 
 ### 2. Deploy the Lambda
 
+**Option 1: Container Image (if registry works)**
 ```bash
 python ../../../scripts/deploy-lambda-localstack.py
+```
+
+**Option 2: ZIP Package (recommended for LocalStack)**
+```bash
+python ../../../scripts/deploy-lambda-localstack-zip.py
 ```
 
 ### 3. Test the Lambda

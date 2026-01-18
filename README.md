@@ -255,6 +255,30 @@ Get-Content response.json  # Windows PowerShell
 
 **Note:** If the container registry (port 4510) is not accessible, use the ZIP package deployment method instead.
 
+### Cold Start Performance: ZIP vs Container Images
+
+**Container Images:**
+- ✅ **Faster cold starts** - Pre-built, ready to run, no extraction needed
+- ✅ **Better for production** - Optimized base images, better caching
+- ✅ **More control** - Custom runtime, dependencies pre-installed
+- ❌ Requires container registry (may have issues in LocalStack community edition)
+
+**ZIP Packages:**
+- ⚠️ **Slower cold starts** - ZIP must be extracted, runtime initialized on first invocation
+- ✅ **Simpler deployment** - No registry needed, works reliably in LocalStack
+- ✅ **Good for development** - Faster iteration, easier debugging
+- ⚠️ Limited to supported runtimes (may not support .NET 10 in LocalStack)
+
+**For LocalStack (Development):**
+- Cold start differences are minimal since it's local
+- ZIP packages are often more reliable for development/testing
+- Use container images when testing production-like scenarios
+
+**For AWS (Production):**
+- Container images generally have better cold start performance
+- Consider using Provisioned Concurrency for critical functions
+- Monitor cold start metrics in CloudWatch
+
 See `src/dotnet/SimpleLambda/README.md` for more details.
 
 ### Using LocalStack
