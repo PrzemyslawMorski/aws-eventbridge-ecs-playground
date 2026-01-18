@@ -4,9 +4,9 @@ A simple .NET Lambda function that can be deployed to LocalStack for testing.
 
 ## Prerequisites
 
-- Docker installed and running
-- LocalStack running (via `docker-compose up -d`)
-- AWS CLI configured for LocalStack
+* Docker installed and running
+* LocalStack running (via `docker-compose up -d`)
+* AWS CLI configured for LocalStack
 
 ## Quick Start
 
@@ -18,63 +18,25 @@ docker-compose up -d
 
 ### 2. Deploy the Lambda
 
-**Option 1: Container Image (if registry works)**
-```bash
-python ../../../scripts/deploy-lambda-localstack.py
-```
+**ZIP Package (recommended for LocalStack)**
 
-**Option 2: ZIP Package (recommended for LocalStack)**
 ```bash
 python ../../../scripts/deploy-lambda-localstack-zip.py
 ```
 
 ### 3. Test the Lambda
 
-```bash
-# Invoke the Lambda
-aws --endpoint-url=http://localhost:4566 lambda invoke \
-  --function-name simple-lambda \
-  --payload '{"test":"data"}' \
-  response.json
-
-# View the response
-cat response.json  # Linux/Mac
-# or
-Get-Content response.json  # Windows PowerShell
-```
-
-## Manual Deployment
-
-If you prefer to deploy manually:
-
-### 1. Build the Docker image
+**Using Python script (recommended - works everywhere):**
 
 ```bash
-docker build -t simple-lambda:latest .
-```
+# Use defaults (simple-lambda with {"test":"data"})
+python ../../../scripts/invoke-lambda-localstack.py
 
-### 2. Tag for LocalStack registry
+# Specify custom payload
+python ../../../scripts/invoke-lambda-localstack.py simple-lambda '{"key":"value"}'
 
-```bash
-docker tag simple-lambda:latest localhost:4510/simple-lambda:latest
-```
-
-### 3. Push to LocalStack registry
-
-```bash
-docker push localhost:4510/simple-lambda:latest
-```
-
-### 4. Create Lambda function
-
-```bash
-aws --endpoint-url=http://localhost:4566 lambda create-function \
-  --function-name simple-lambda \
-  --package-type Image \
-  --code ImageUri=localhost:4510/simple-lambda:latest \
-  --role arn:aws:iam::000000000000:role/lambda-role \
-  --timeout 30 \
-  --memory-size 512
+# Save response to file
+python ../../../scripts/invoke-lambda-localstack.py simple-lambda '{"test":"data"}' --output response.json
 ```
 
 ## Building Locally
@@ -87,6 +49,7 @@ dotnet publish -c Release
 ## Dockerfile Details
 
 The Dockerfile uses a multi-stage build:
+
 1. **Build stage**: Uses .NET SDK to build and publish the Lambda
 2. **Runtime stage**: Uses .NET runtime with Lambda Runtime Interface Emulator (RIE) for LocalStack compatibility
 

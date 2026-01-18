@@ -54,7 +54,7 @@ This project demonstrates:
    # Or set environment variables:
    # export AWS_ACCESS_KEY_ID=your-key
    # export AWS_SECRET_ACCESS_KEY=your-secret
-   # export AWS_DEFAULT_REGION=us-east-1
+   # export AWS_DEFAULT_REGION=eu-central-1
    ```
 
 3. **Deploy infrastructure**
@@ -82,28 +82,19 @@ This project demonstrates:
    python scripts/setup-localstack.py
    ```
 
-   **Or manually:**
-   ```bash
-   # Using Docker Compose
-   docker-compose up -d localstack
-
-   # Or using LocalStack CLI
-   localstack start
-   ```
-
 2. **Configure AWS CLI for LocalStack**
    ```bash
    # Linux/Mac
    export AWS_ENDPOINT_URL=http://localhost:4566
    export AWS_ACCESS_KEY_ID=test
    export AWS_SECRET_ACCESS_KEY=test
-   export AWS_DEFAULT_REGION=us-east-1
+   export AWS_DEFAULT_REGION=eu-central-1
 
    # Windows (PowerShell)
    $env:AWS_ENDPOINT_URL="http://localhost:4566"
    $env:AWS_ACCESS_KEY_ID="test"
    $env:AWS_SECRET_ACCESS_KEY="test"
-   $env:AWS_DEFAULT_REGION="us-east-1"
+   $env:AWS_DEFAULT_REGION="eu-central-1"
    ```
 
 3. **Deploy to LocalStack**
@@ -154,7 +145,7 @@ aws-eventbridge-ecs-playground/
     ├── setup-localstack.py           # Cross-platform LocalStack setup
     ├── verify-localstack.py          # Verify LocalStack is accessible
     ├── teardown-localstack.py        # Cross-platform LocalStack teardown
-    ├── deploy-lambda-localstack.py   # Cross-platform Lambda deployment
+    ├── deploy-lambda-localstack-zip.py   # Cross-platform Lambda deployment
     └── requirements.txt              # Python dependencies (optional)
 ```
 
@@ -181,7 +172,7 @@ Create a `.env` file in the **project root directory** (same level as `docker-co
 
 ```bash
 # AWS Configuration
-AWS_REGION=us-east-1
+AWS_REGION=eu-central-1
 AWS_ACCOUNT_ID=your-account-id
 
 # LocalStack Configuration (for local development)
@@ -221,16 +212,7 @@ dotnet test
 
 ### Deploy and Test .NET Lambda in LocalStack
 
-**Option 1: Container Image (requires registry on port 4510)**
-```bash
-# Start LocalStack (if not already running)
-docker-compose up -d
-
-# Deploy the Lambda function as container image
-python scripts/deploy-lambda-localstack.py
-```
-
-**Option 2: ZIP Package (recommended if registry issues)**
+**ZIP Package (recommended if registry issues)**
 ```bash
 # Start LocalStack (if not already running)
 docker-compose up -d
@@ -241,16 +223,17 @@ python scripts/deploy-lambda-localstack-zip.py
 
 **Test the Lambda:**
 ```bash
-# Invoke the Lambda
-aws --endpoint-url=http://localhost:4566 lambda invoke \
-  --function-name simple-lambda \
-  --payload '{"test":"data"}' \
-  response.json
+# Use defaults (simple-lambda with {"test":"data"})
+python scripts/invoke-lambda-localstack.py
 
-# View the response
-cat response.json  # Linux/Mac
-# or
-Get-Content response.json  # Windows PowerShell
+# Specify custom payload
+python scripts/invoke-lambda-localstack.py simple-lambda '{"key":"value"}'
+
+# Use a JSON file as payload
+python scripts/invoke-lambda-localstack.py simple-lambda --file payload.json
+
+# Save response to file
+python scripts/invoke-lambda-localstack.py simple-lambda '{"test":"data"}' --output response.json
 ```
 
 **Note:** If the container registry (port 4510) is not accessible, use the ZIP package deployment method instead.

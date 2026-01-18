@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Alternative deployment script using ZIP package instead of container images.
-This works around registry issues in LocalStack community edition.
+Deployment script for .NET Lambda functions using ZIP package.
 """
 
 import os
