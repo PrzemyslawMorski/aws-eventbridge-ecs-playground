@@ -1,0 +1,6 @@
+# Python dependencies for deployment scripts
+# Note: This script uses subprocess and standard library only
+# No external dependencies required, but listed for future extensibility
+
+# Optional: For future AWS SDK integration
+# boto3>=1.34.0

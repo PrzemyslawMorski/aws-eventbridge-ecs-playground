@@ -1,23 +1,42 @@
-version: '3.8'
-
 services:
   localstack:
     container_name: localstack
     image: localstack/localstack:latest
     ports:
-      - "4566:4566"            # LocalStack Gateway
-      - "4510-4559:4510-4559"  # External services port range
+      - "4566:4566" # LocalStack Gateway
+      - "4510-4559:4510-4559" # External services port range
     environment:
-      - SERVICES=ecs,events,iam,logs,cloudformation
+      - SERVICES=ecs,events,iam,logs,cloudformation,lambda,s3,dynamodb,sqs,sns,apigateway
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
       - DOCKER_HOST=unix:///var/run/docker.sock
       - PERSISTENCE=1
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_REMOVE_CONTAINERS=true
+      - AUTO_LOAD_POD=1
+      - HOSTNAME_EXTERNAL=localhost
+      - HOSTNAME=localstack
     volumes:
       - "./localstack-data:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./localstack-init:/etc/localstack/init/ready.d"
+      - "./localstack-pods:/etc/localstack/init-pods.d"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - localstack-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G      
+
+networks:
+  localstack-network:
+    driver: bridge

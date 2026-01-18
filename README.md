@@ -28,13 +28,14 @@ This project demonstrates:
 - AWS account with appropriate permissions
 
 ### For Backend Development
-- **.NET 8.0 SDK** (for initial implementation)
+- **.NET 10.0 SDK** (for initial implementation)
 - **Python 3.11+** (for Python alternative - coming soon)
 - **Go 1.21+** (for Golang alternative - coming soon)
 - **Node.js 20+** (for Node.js alternative - coming soon)
 
 ### For LocalStack Development
 - Docker and Docker Compose
+- Python 3.8+ (for cross-platform scripts)
 - LocalStack CLI (optional, but recommended)
 
 ## 🚀 Quick Start
@@ -77,12 +78,8 @@ This project demonstrates:
 
 1. **Start LocalStack (Automated)**
    ```bash
-   # On Linux/Mac
-   chmod +x scripts/setup-localstack.sh
-   ./scripts/setup-localstack.sh
-
-   # On Windows (PowerShell)
-   .\scripts\setup-localstack.ps1
+   # Cross-platform Python script
+   python scripts/setup-localstack.py
    ```
 
    **Or manually:**
@@ -134,7 +131,8 @@ aws-eventbridge-ecs-playground/
 ├── src/                    # Application code
 │   ├── dotnet/             # .NET implementations (initial)
 │   │   ├── EventProducer/  # .NET service that publishes events
-│   │   └── EventConsumer/  # .NET service that consumes events
+│   │   ├── EventConsumer/  # .NET service that consumes events
+│   │   └── SimpleLambda/   # Simple .NET Lambda function example
 │   ├── python/             # Python alternatives (coming soon)
 │   │   ├── event-producer/ # Python service that publishes events
 │   │   └── event-consumer/ # Python service that consumes events
@@ -147,8 +145,10 @@ aws-eventbridge-ecs-playground/
 ├── docker-compose.yml      # LocalStack and local services
 ├── .env.example           # Environment variables template
 └── scripts/               # Helper scripts for setup
-    ├── setup-localstack.sh    # LocalStack setup (Linux/Mac)
-    └── setup-localstack.ps1   # LocalStack setup (Windows)
+    ├── setup-localstack.py           # Cross-platform LocalStack setup
+    ├── teardown-localstack.py        # Cross-platform LocalStack teardown
+    ├── deploy-lambda-localstack.py   # Cross-platform Lambda deployment
+    └── requirements.txt              # Python dependencies (optional)
 ```
 
 ## 💻 Backend Implementations
@@ -170,7 +170,7 @@ Each implementation provides the same functionality, allowing you to compare:
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Create a `.env` file in the **project root directory** (same level as `docker-compose.yml` and `README.md`) with the following configuration:
 
 ```bash
 # AWS Configuration
@@ -180,7 +180,14 @@ AWS_ACCOUNT_ID=your-account-id
 # LocalStack Configuration (for local development)
 LOCALSTACK_ENDPOINT=http://localhost:4566
 USE_LOCALSTACK=false
+
+# Application Configuration
+LOG_LEVEL=INFO
 ```
+
+**Location:** `aws-eventbridge-ecs-playground/.env`
+
+**Note:** The `.env` file is already in `.gitignore`, so it won't be committed to version control. Create it locally for your development environment.
 
 ### AWS Permissions Required
 
@@ -203,6 +210,45 @@ dotnet test
 cd ../EventConsumer
 dotnet build
 dotnet test
+```
+
+### Deploy and Test .NET Lambda in LocalStack
+
+```bash
+# Start LocalStack (if not already running)
+docker-compose up -d
+
+# Deploy the Lambda function
+python scripts/deploy-lambda-localstack.py
+
+# Invoke the Lambda
+aws --endpoint-url=http://localhost:4566 lambda invoke \
+  --function-name simple-lambda \
+  --payload '{"test":"data"}' \
+  response.json
+
+# View the response
+cat response.json  # Linux/Mac
+# or
+Get-Content response.json  # Windows PowerShell
+```
+
+See `src/dotnet/SimpleLambda/README.md` for more details.
+
+### Using LocalStack
+
+LocalStack provides AWS service emulation via the API endpoint at `http://localhost:4566`.
+
+**Example commands:**
+```bash
+# List S3 buckets
+aws --endpoint-url=http://localhost:4566 s3 ls
+
+# List Lambda functions
+aws --endpoint-url=http://localhost:4566 lambda list-functions
+
+# List EventBridge rules
+aws --endpoint-url=http://localhost:4566 events list-rules
 ```
 
 ### Test with LocalStack
@@ -248,6 +294,10 @@ terraform destroy
 
 ### LocalStack
 ```bash
+# Using the teardown script (recommended)
+python scripts/teardown-localstack.py
+
+# Or manually
 docker-compose down -v
 # or
 localstack stop

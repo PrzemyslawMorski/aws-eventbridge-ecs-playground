@@ -14,6 +14,12 @@ cdk.out/
 
 # LocalStack data
 localstack-data/
+# Keep init scripts and pods directories, but ignore their contents (except README)
+localstack-init/*
+!localstack-init/README.md
+localstack-pods/*
+!localstack-pods/README.md
+!localstack-pods/.gitkeep
 
 # IDE
 .idea/
