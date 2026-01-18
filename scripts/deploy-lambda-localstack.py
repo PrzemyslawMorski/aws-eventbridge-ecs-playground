@@ -15,7 +15,7 @@ from pathlib import Path
 LAMBDA_NAME = "simple-lambda"
 LAMBDA_DIR = Path(__file__).parent.parent / "src" / "dotnet" / "SimpleLambda"
 IMAGE_NAME = "simple-lambda:latest"
-REGISTRY = "localhost:4510"  # LocalStack container registry
+REGISTRY = "127.0.0.1:4510"  # LocalStack container registry (use 127.0.0.1 instead of localhost for IPv4)
 LOCALSTACK_ENDPOINT = "http://localhost:4566"
 
 
@@ -106,17 +106,30 @@ def tag_and_push_image():
     run_command(["docker", "tag", IMAGE_NAME, f"{REGISTRY}/{IMAGE_NAME}"])
     
     print_step("Pushing image to LocalStack registry...", "📤")
-    print("   Note: If this fails with 'connection refused', Docker may need to allow insecure registries")
-    print("   Windows/Mac: Docker Desktop > Settings > Docker Engine > Add to JSON:")
-    print('   "insecure-registries": ["localhost:4510"]')
-    result = run_command(["docker", "push", f"{REGISTRY}/{IMAGE_NAME}"], check=False)
+    print("   Note: Registry may start lazily on first push attempt")
+    
+    # Try pushing - the registry may start lazily on first push
+    result = run_command(["docker", "push", f"{REGISTRY}/{IMAGE_NAME}"], check=False, capture_output=True)
     if result and result.returncode != 0:
-        print("\n⚠️  Push failed. Common solutions:")
-        print("   1. Configure Docker insecure registry (see instructions above)")
-        print("   2. Restart Docker Desktop after configuration change")
-        print("   3. Check LocalStack logs: docker-compose logs localstack | grep -i registry")
-        print("   4. Verify port 4510 is accessible: curl http://localhost:4510/v2/")
-        sys.exit(1)
+        # Check if it's a connection refused - registry might not be started yet
+        error_msg = (result.stderr or result.stdout or "").lower()
+        if "connection refused" in error_msg or "dial tcp" in error_msg:
+            print("   ⚠️  First push attempt failed - registry may be starting...")
+            print("   Waiting 5 seconds and retrying...")
+            import time
+            time.sleep(5)
+            result = run_command(["docker", "push", f"{REGISTRY}/{IMAGE_NAME}"], check=False, capture_output=True)
+        
+        if result and result.returncode != 0:
+            print("\n⚠️  Push failed. Common solutions:")
+            print("   1. Ensure Docker insecure registry includes both:")
+            print('      "insecure-registries": ["localhost:4510", "127.0.0.1:4510"]')
+            print("   2. Restart Docker Desktop completely after configuration change")
+            print("   3. Restart LocalStack: docker-compose restart localstack")
+            print("   4. Check LocalStack logs: docker-compose logs localstack")
+            if result.stderr:
+                print(f"\n   Error details: {result.stderr[:200]}")
+            sys.exit(1)
 
 
 def create_or_update_lambda():

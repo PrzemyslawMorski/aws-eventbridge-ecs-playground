@@ -89,6 +89,24 @@ def check_container_status():
         return None
 
 
+def check_registry_port():
+    """Check if LocalStack registry port is accessible."""
+    print_step("Checking LocalStack registry port (4510)...", "📦")
+    
+    try:
+        with urllib.request.urlopen("http://localhost:4510/v2/", timeout=2) as response:
+            print("   ✅ Registry port 4510 is accessible")
+            return True
+    except urllib.error.URLError:
+        print("   ⚠️  Registry port 4510 is not accessible")
+        print("   This is needed for Lambda container images")
+        print("   The registry may start automatically when you push an image")
+        return False
+    except Exception as e:
+        print(f"   ⚠️  Error checking registry: {e}")
+        return False
+
+
 def test_basic_operations():
     """Test basic LocalStack operations."""
     import subprocess
@@ -141,11 +159,20 @@ def main():
     print()
     
     if port_accessible:
+        # Check registry port
+        print()
+        registry_accessible = check_registry_port()
+        print()
+        
         # Test operations
         test_basic_operations()
         print()
         print("✅ LocalStack is fully operational!")
         print(f"   API Endpoint: {LOCALSTACK_ENDPOINT}")
+        if registry_accessible:
+            print("   Registry: http://localhost:4510")
+        else:
+            print("   ⚠️  Registry port 4510 not accessible (may need Docker insecure registry config)")
         print()
         print("You can now use LocalStack with:")
         print(f"   aws --endpoint-url={LOCALSTACK_ENDPOINT} <command>")

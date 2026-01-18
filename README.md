@@ -221,13 +221,26 @@ dotnet test
 
 ### Deploy and Test .NET Lambda in LocalStack
 
+**Option 1: Container Image (requires registry on port 4510)**
 ```bash
 # Start LocalStack (if not already running)
 docker-compose up -d
 
-# Deploy the Lambda function
+# Deploy the Lambda function as container image
 python scripts/deploy-lambda-localstack.py
+```
 
+**Option 2: ZIP Package (recommended if registry issues)**
+```bash
+# Start LocalStack (if not already running)
+docker-compose up -d
+
+# Deploy the Lambda function as ZIP package
+python scripts/deploy-lambda-localstack-zip.py
+```
+
+**Test the Lambda:**
+```bash
 # Invoke the Lambda
 aws --endpoint-url=http://localhost:4566 lambda invoke \
   --function-name simple-lambda \
@@ -239,6 +252,8 @@ cat response.json  # Linux/Mac
 # or
 Get-Content response.json  # Windows PowerShell
 ```
+
+**Note:** If the container registry (port 4510) is not accessible, use the ZIP package deployment method instead.
 
 See `src/dotnet/SimpleLambda/README.md` for more details.
 
@@ -257,6 +272,32 @@ aws --endpoint-url=http://localhost:4566 lambda list-functions
 # List EventBridge rules
 aws --endpoint-url=http://localhost:4566 events list-rules
 ```
+
+### Docker Configuration for Lambda Container Images
+
+If you're deploying Lambda functions as container images, Docker needs to be configured to allow pushing to LocalStack's registry on port 4510.
+
+**Configure Docker Desktop (Windows/Mac):**
+1. Open Docker Desktop
+2. Go to **Settings** > **Docker Engine**
+3. Add this to the JSON configuration (add to existing JSON, don't replace):
+   ```json
+   {
+     "insecure-registries": ["localhost:4510", "127.0.0.1:4510"]
+   }
+   ```
+   **Important:** If you already have other settings, merge this into your existing JSON.
+4. Click **Apply & Restart**
+5. Wait for Docker to fully restart (may take 1-2 minutes)
+
+**Note:** The registry service may start lazily when you first push an image. If it still fails, try pushing again after a few seconds.
+
+**Verify the configuration:**
+```bash
+python scripts/verify-localstack.py
+```
+
+This will check if both the API (port 4566) and registry (port 4510) are accessible.
 
 ### Test with LocalStack
 
