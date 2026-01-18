@@ -1,0 +1,6 @@
+POST http://localhost:4566/eu-central-1/2015-03-31/functions/simple-lambda/invocations
+Content-Type: application/json
+
+{
+  "test": "data"
+}
