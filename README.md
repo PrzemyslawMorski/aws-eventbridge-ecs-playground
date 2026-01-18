@@ -115,10 +115,16 @@ This project demonstrates:
    terraform apply
    ```
 
-4. **Verify LocalStack deployment**
+4. **Verify LocalStack is accessible**
    ```bash
-   aws --endpoint-url=http://localhost:4566 ecs list-clusters
-   aws --endpoint-url=http://localhost:4566 events list-rules
+   # Using the verification script (recommended)
+   python scripts/verify-localstack.py
+   
+   # Or manually check health
+   curl http://localhost:4566/_localstack/health
+   
+   # Or test with AWS CLI
+   aws --endpoint-url=http://localhost:4566 s3 ls
    ```
 
 ## 📁 Project Structure
@@ -146,6 +152,7 @@ aws-eventbridge-ecs-playground/
 ├── .env.example           # Environment variables template
 └── scripts/               # Helper scripts for setup
     ├── setup-localstack.py           # Cross-platform LocalStack setup
+    ├── verify-localstack.py          # Verify LocalStack is accessible
     ├── teardown-localstack.py        # Cross-platform LocalStack teardown
     ├── deploy-lambda-localstack.py   # Cross-platform Lambda deployment
     └── requirements.txt              # Python dependencies (optional)
